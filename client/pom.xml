@@ -107,6 +107,7 @@
         <artifactId>buildnumber-maven-plugin</artifactId>
         <configuration>
           <locale>en_US</locale>
+          <revisionOnScmFailure>${project.version}</revisionOnScmFailure>
         </configuration>
         <executions>
           <execution>
@@ -209,6 +210,12 @@
 
     <profile>
       <id>native</id>
+      <activation>
+        <property>
+          <name>java.vendor.url</name>
+          <value>https://www.graalvm.org/</value>
+        </property>
+      </activation>
       <build>
         <plugins>
           <plugin>
@@ -216,9 +223,12 @@
             <artifactId>native-maven-plugin</artifactId>
             <configuration>
               <skip>false</skip>
+              <debug>true</debug>
               <mainClass>org.mvndaemon.mvnd.client.DefaultClient</mainClass>
               <imageName>mvnd</imageName>
               <buildArgs>--no-server
+	                 --verbose
+	                 --native-compiler-path=/usr/bin/cc
                          --no-fallback
                          --allow-incomplete-classpath
                          ${graalvm-native-static-opt}

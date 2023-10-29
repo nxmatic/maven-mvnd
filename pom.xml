@@ -378,6 +378,10 @@
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
             <excludes combine.children="append">
+              <exclude>.envrc</exclude>
+              <exclude>.devenv/**</exclude>
+              <exclude>**/.trash/**</exclude>
+              <exclude>*.nix</exclude>
               <exclude>**/*.png</exclude>
               <exclude>**/*.json</exclude>
               <exclude>**/.mvn/*</exclude>
