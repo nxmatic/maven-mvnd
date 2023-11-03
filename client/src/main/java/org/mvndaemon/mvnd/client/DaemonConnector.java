@@ -19,10 +19,8 @@
 package org.mvndaemon.mvnd.client;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -379,35 +377,18 @@ public class DaemonConnector {
             args.add("-classpath");
             args.add(plexusClassworldsPath);
             args.add("-javaagent:" + mvndAgentPath);
-            // debug options
-            if (parameters.property(Environment.MVND_DEBUG).asBoolean()) {
-                String address =
-                        parameters.property(Environment.MVND_DEBUG_ADDRESS).asString();
-                String host;
-                String port;
-                int column = address.indexOf(':');
-                if (column >= 0) {
-                    host = address.substring(0, column);
-                    port = address.substring(column + 1);
-                } else {
-                    host = "localhost";
-                    port = address;
-                }
-                if (!port.matches("[0-9]+")) {
-                    throw new IllegalArgumentException("Wrong debug address syntax: " + address);
-                }
-                int iPort = Integer.parseInt(port);
-                if (iPort == 0) {
-                    try (ServerSocketChannel channel = SocketFamily.inet.openServerSocket()) {
-                        iPort = ((InetSocketAddress) channel.getLocalAddress()).getPort();
-                    } catch (IOException e) {
-                        throw new IllegalStateException("Unable to find a free debug port", e);
-                    }
-                }
-                address = host + ":" + iPort;
-                output.accept(Message.buildStatus("Daemon listening for debugger on address: " + address));
-                args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + address);
-            }
+
+            // debug option
+            String debugOption = "-agentlib:jdwp=transport=dt_socket,server=y";
+            String debugAddress =
+                    parameters.property(Environment.MVND_DEBUG_ADDRESS).asString();
+            debugOption += ",address=" + debugAddress;
+            output.accept(Message.buildStatus("Daemon listening for debugger on address: " + debugAddress));
+            Boolean suspend =
+                    parameters.property(Environment.MVND_DEBUG_SUSPEND).asBoolean();
+            debugOption += ",suspend=" + (suspend ? "y" : "n");
+            args.add(debugOption);
+
             // jvm args
             String jvmArgs = parameters.jvmArgs();
             if (jvmArgs != null) {
@@ -452,6 +433,7 @@ public class DaemonConnector {
                             .socketFamily()
                             .orElseGet(() -> getJavaVersion() >= 16.0f ? SocketFamily.unix : SocketFamily.inet)
                             .toString());
+            Environment.MVND_DEBUG_ADDRESS.addSystemProperty(args, parameters.debugAddress());
             parameters.discriminatingSystemProperties(args);
             args.add("org.codehaus.plexus.classworlds.launcher.Launcher");
             command = String.join(" ", args);

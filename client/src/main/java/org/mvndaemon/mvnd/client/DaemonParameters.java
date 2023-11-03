@@ -23,6 +23,8 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -392,6 +394,35 @@ public class DaemonParameters {
 
     public Optional<SocketFamily> socketFamily() {
         return property(Environment.MVND_SOCKET_FAMILY).asOptional().map(SocketFamily::valueOf);
+    }
+
+    public String debugAddress() {
+        class PortFinder {
+            final InetSocketAddress address;
+
+            PortFinder(String address) {
+                this.address = findAvailablePort((InetSocketAddress) SocketFamily.fromString("inet:" + address));
+            }
+
+            private InetSocketAddress findAvailablePort(InetSocketAddress address) {
+                for (int port = address.getPort(); port <= 65535; port++) {
+                    try (ServerSocket socket = new ServerSocket()) {
+                        final InetSocketAddress endpoint = new InetSocketAddress(address.getHostString(), port);
+                        socket.bind(endpoint);
+                        return endpoint;
+                    } catch (IOException e) {
+                        // Port is not available, try the next one
+                    }
+                }
+                throw new RuntimeException("Failed to find available port");
+            }
+
+            String address() {
+                return address.getHostName() + ":" + address.getPort();
+            }
+        }
+        ;
+        return new PortFinder(property(Environment.MVND_DEBUG_ADDRESS).orFail().asString()).address();
     }
 
     public static String findDefaultMultimoduleProjectDirectory(Path pwd) {
