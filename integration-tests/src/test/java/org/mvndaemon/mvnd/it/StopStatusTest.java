@@ -56,7 +56,7 @@ class StopStatusTest {
             final TestClientOutput output = new TestClientOutput();
             client.execute(output, "--status").assertSuccess();
 
-            output.assertContainsMatchingSubsequence(d.getId() + " +" + d.getPid() + " +" + d.getAddress());
+            output.assertContainsMatchingSubsequence(d.getId() + " +" + d.getPid() + " +" + d.getDaemonAddress());
         }
         /* Wait, till the instance becomes idle */
         registry.awaitIdle(d.getId());

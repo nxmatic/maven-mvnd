@@ -515,7 +515,7 @@ public class DaemonConnector {
             throws DaemonException.ConnectException {
         LOGGER.debug("Connecting to Daemon");
         try {
-            DaemonConnection connection = connect(daemon.getAddress(), daemon.getToken());
+            DaemonConnection connection = connect(daemon.getDaemonAddress(), daemon.getToken());
             return new DaemonClientConnection(connection, daemon, staleAddressDetector, newDaemon, parameters);
         } catch (DaemonException.ConnectException e) {
             staleAddressDetector.maybeStaleAddress(e);

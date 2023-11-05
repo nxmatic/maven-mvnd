@@ -23,6 +23,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.file.Files;
@@ -401,20 +402,44 @@ public class DaemonParameters {
             final InetSocketAddress address;
 
             PortFinder(String address) {
-                this.address = findAvailablePort((InetSocketAddress) SocketFamily.fromString("inet:" + address));
+                this.address = findAvailablePort(address);
             }
 
-            private InetSocketAddress findAvailablePort(InetSocketAddress address) {
-                for (int port = address.getPort(); port <= 65535; port++) {
+            InetSocketAddress findAvailablePort(String address) {
+                int colonIndex = address.indexOf(":");
+                String host = colonIndex == -1 ? "localhos" : address.substring(0, colonIndex);
+                int port = Integer.parseInt(address.substring(colonIndex + 1));
+                if (port == 0) {
+                    return allocateServerPort(host);
+                }
+                return findAvailablePort(new InetSocketAddress(host, port), 10);
+            }
+
+            InetSocketAddress allocateServerPort(String hostname) {
+                int port = 0;
+                try (ServerSocket serverSocket = new ServerSocket(port)) {
+                    port = serverSocket.getLocalPort();
+                    serverSocket.close();
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to find available port", e);
+                }
+                return new InetSocketAddress(hostname, port);
+            }
+
+            InetSocketAddress findAvailablePort(InetSocketAddress address, int maxAttempts) {
+                for (int port = address.getPort(); port <= address.getPort() + maxAttempts; port++) {
                     try (ServerSocket socket = new ServerSocket()) {
                         final InetSocketAddress endpoint = new InetSocketAddress(address.getHostString(), port);
                         socket.bind(endpoint);
                         return endpoint;
-                    } catch (IOException e) {
+                    } catch (BindException e) {
                         // Port is not available, try the next one
+                    } catch (IOException e) {
+                        throw new RuntimeException("Unknown error while trying to find an available port after "
+                                + maxAttempts + " attempts");
                     }
                 }
-                throw new RuntimeException("Failed to find available port");
+                throw new RuntimeException("Failed to find an available port after " + maxAttempts + " attempts");
             }
 
             String address() {

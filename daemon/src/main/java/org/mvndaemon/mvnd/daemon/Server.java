@@ -160,6 +160,7 @@ public class Server implements AutoCloseable, Runnable {
                     Environment.MVND_HOME.asString(),
                     DaemonRegistry.getProcessId(),
                     SocketFamily.toString(socket.getLocalAddress()),
+                    Environment.MVND_DEBUG_ADDRESS.asString(),
                     token,
                     Locale.getDefault().toLanguageTag(),
                     opts,

@@ -35,7 +35,8 @@ public class DaemonInfo {
     private final String javaHome;
     private final String mvndHome;
     private final int pid;
-    private final String address;
+    private final String daemonAddress;
+    private final String debugAddress;
     private final byte[] token;
     private final String locale;
     private final List<String> options;
@@ -48,7 +49,8 @@ public class DaemonInfo {
             String javaHome,
             String mavenHome,
             int pid,
-            String address,
+            String daemonAddress,
+            String debugAddress,
             byte[] token,
             String locale,
             List<String> options,
@@ -59,7 +61,8 @@ public class DaemonInfo {
         this.javaHome = javaHome;
         this.mvndHome = mavenHome;
         this.pid = pid;
-        this.address = address;
+        this.daemonAddress = daemonAddress;
+        this.debugAddress = debugAddress;
         this.token = token;
         this.locale = locale;
         this.options = options;
@@ -84,8 +87,12 @@ public class DaemonInfo {
         return pid;
     }
 
-    public String getAddress() {
-        return address;
+    public String getDaemonAddress() {
+        return daemonAddress;
+    }
+
+    public String getDebugAddress() {
+        return debugAddress;
     }
 
     public byte[] getToken() {
@@ -124,7 +131,8 @@ public class DaemonInfo {
             li = lastIdle;
             lb = lastBusy;
         }
-        return new DaemonInfo(id, javaHome, mvndHome, pid, address, token, locale, options, state, li, lb);
+        return new DaemonInfo(
+                id, javaHome, mvndHome, pid, daemonAddress, debugAddress, token, locale, options, state, li, lb);
     }
 
     @Override
@@ -143,8 +151,10 @@ public class DaemonInfo {
                 .append(mvndHome)
                 .append(", pid=")
                 .append(pid)
-                .append(", address=")
-                .append(address)
+                .append(", daemonAddress=")
+                .append(daemonAddress)
+                .append(", debugAddress=")
+                .append(debugAddress)
                 .append(", locale=")
                 .append(locale)
                 .append(", state=")

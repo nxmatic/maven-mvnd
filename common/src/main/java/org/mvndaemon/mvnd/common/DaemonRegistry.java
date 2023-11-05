@@ -196,7 +196,8 @@ public class DaemonRegistry implements AutoCloseable {
                         String javaHome = readString();
                         String mavenHome = readString();
                         int pid = buffer.getInt();
-                        String address = readString();
+                        String daemonAddress = readString();
+                        String debugAddress = readString();
 
                         byte[] token = new byte[DaemonInfo.TOKEN_SIZE];
                         buffer.get(token);
@@ -211,7 +212,17 @@ public class DaemonRegistry implements AutoCloseable {
                         long lastIdle = buffer.getLong();
                         long lastBusy = buffer.getLong();
                         DaemonInfo di = new DaemonInfo(
-                                daemonId, javaHome, mavenHome, pid, address, token, locale, opts, state, lastIdle,
+                                daemonId,
+                                javaHome,
+                                mavenHome,
+                                pid,
+                                daemonAddress,
+                                debugAddress,
+                                token,
+                                locale,
+                                opts,
+                                state,
+                                lastIdle,
                                 lastBusy);
                         infosMap.putIfAbsent(di.getId(), di);
                     }
@@ -236,7 +247,8 @@ public class DaemonRegistry implements AutoCloseable {
                             writeString(di.getJavaHome());
                             writeString(di.getMvndHome());
                             buffer.putInt(di.getPid());
-                            writeString(di.getAddress());
+                            writeString(di.getDaemonAddress());
+                            writeString(di.getDebugAddress());
                             buffer.put(di.getToken());
                             writeString(di.getLocale());
                             buffer.putInt(di.getOptions().size());
